@@ -3,7 +3,9 @@ import {
     BestfriendsGuild, 
     DefaultBestfriendsGuild,
     Guild, 
-    Collection 
+    Collection ,
+    colors,
+    _
 } from '../deps';
 
 export async function loadGuilds(Bestfriends: Bestfriends) {
@@ -15,10 +17,10 @@ export async function loadGuilds(Bestfriends: Bestfriends) {
             //If the guild isnt in the database, add it
             if (!query) {
                 await Bestfriends.database.set(guild.id, DefaultBestfriendsGuild);
-                Bestfriends.log(`Added '${guild.name}' to the database`);
+                Bestfriends.log(`Added '${guild.name.yellow}' to the database`);
             } else {
                 //If the default schema is updated this should resolve errors;
-                if (Object.keys(query) != Object.keys(DefaultBestfriendsGuild)) {
+                if (!_.isEqual(Object.keys(query), Object.keys(DefaultBestfriendsGuild))) {
                     let Missing_Keys: string[] = [];
                     let Extra_Keys: string[] = [];
                     
@@ -30,7 +32,7 @@ export async function loadGuilds(Bestfriends: Bestfriends) {
                         }
                     }
 
-                    //Detects extra keys
+                    //Detects extra / leftover keys
                     for (let key of Object.keys(query)) {
                         if (!DefaultBestfriendsGuild[key]) {
                             delete query[key];
@@ -40,10 +42,10 @@ export async function loadGuilds(Bestfriends: Bestfriends) {
 
                     await Bestfriends.database.set(guild.id, query);
                     if (Missing_Keys.length || Extra_Keys.length) {
-                        Bestfriends.log(`'${guild.name}' was missing keys ${Missing_Keys.length ? Missing_Keys.map(key => `'${key}' `) : 'NONE'} and had extra keys ${Extra_Keys.length ? Extra_Keys.map(key => `'${key}' `) : 'NONE'}`);
+                        Bestfriends.log(`'${guild.name.red}' was missing keys${Missing_Keys.length ? Missing_Keys.map(key => ` '${key}'`.red) : ' NONE'.gray} and had extra keys${Extra_Keys.length ? Extra_Keys.map(key => ` '${key}'`.red) : ' NONE'.gray}`);
                     }
                 }
-                Bestfriends.log(`'${guild.name}' already exists in the database`);
+                Bestfriends.log(`'${guild.name.yellow}' already exists in the database`);
             }
         } catch (e) {
             throw e;
@@ -58,7 +60,7 @@ export async function createGuild(Bestfriends: Bestfriends, guild: Guild) {
     if (query) return;
 
     await Bestfriends.database.set(guild.id, DefaultBestfriendsGuild);
-    Bestfriends.log(`Added '${guild.name}' to the database`);
+    Bestfriends.log(`Added '${guild.name.green}' to the database`);
 }
 
 export async function deleteGuild(Bestfriends: Bestfriends, guild: Guild) {
