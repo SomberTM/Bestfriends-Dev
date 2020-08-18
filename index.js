@@ -1,3 +1,3 @@
-const { Bestfriends, ms } = require('./dist/deps');
+const { Bestfriends } = require('./dist/deps');
 new Bestfriends();
 
