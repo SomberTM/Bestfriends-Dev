@@ -19,7 +19,19 @@ export class Emitter extends EventEmitter {
         return {
             NONE: 'noneArguments',
             MISSING: 'missingArguments',
-            INCORRECT: 'incorrectArguments'
+            INVALID: 'invalidArguments'
+        }
+    }
+
+    get PERMISSIONS(): PERMISSIONS {
+        return {
+            MISSING: 'missingPermissions'
+        }
+    }
+
+    get PAGEREACTION(): PAGEREACTIONS {
+        return {
+            CREATE: 'pageReactionCreate'
         }
     }
 
@@ -28,5 +40,28 @@ export class Emitter extends EventEmitter {
 export interface ARGS {
     NONE: string,
     MISSING: string,
-    INCORRECT: string
+    INVALID: string
+}
+
+export interface PERMISSIONS {
+    MISSING: string
+}
+
+export interface PAGEREACTIONS {
+    CREATE: string,
+}
+
+export interface ARGUMENTS_NONE {
+    example: string,
+    append_prefix?: boolean,
+    missing: string[]
+}
+
+export interface ARGUMENTS_MISSING {
+    example: string,
+    which: string[]
+}
+
+export interface ARGUMENTS_INVALID {
+
 }

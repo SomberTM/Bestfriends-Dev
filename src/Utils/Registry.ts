@@ -22,11 +22,11 @@ export class Registry {
 
             //Get the helper data
             let helper_entry: Helper = {
-                name: commandFile.name,
-                aliases: commandFile.aliases,
-                description: commandFile.description,
-                examples: commandFile.examples,
-                permissions: commandFile.permissions
+                name: <string>commandFile.name,
+                aliases: <string[]>commandFile.aliases,
+                description: <string>commandFile.description,
+                examples: <string[]>commandFile.examples,
+                permissions: <PermissionResolvable[]>commandFile.permissions
             }
 
             this.helpers.push(helper_entry);
@@ -42,29 +42,70 @@ export class Registry {
         }
 
         let missing_properties: string[] = [];
+        let invalid_types: string[] = [];
 
         if (!command.name) {
             missing_properties.push("name");
+        } else if (typeof command.name != "string") {
+            invalid_types.push(`name : requires string`);
         }
 
         if (!command.aliases) {
             missing_properties.push("aliases");     
+        } else if (!Array.isArray(command.aliases)) {
+            invalid_types.push("aliases : requires string[]");
+        } else {
+            let will_break: boolean = false;
+            (<any[]>command.aliases).forEach((elem: any) => {
+                if (typeof elem != "string" && !will_break) {
+                    invalid_types.push("aliases : requires string[]");
+                    will_break = true;
+                }
+            })
         }
 
         if (!command.description) {
             missing_properties.push("description");
+        } else if (typeof command.description != "string") {
+            invalid_types.push(`description : requires string`);
         }
 
         if (!command.examples) {
             missing_properties.push("examples");
+        } else if (!Array.isArray(command.examples)) {
+            invalid_types.push("examples : requires string[]");
+        } else {
+            let will_break: boolean = false;
+            (<any[]>command.examples).forEach((elem: any) => {
+                if (typeof elem != "string" && !will_break) {
+                    invalid_types.push("examples : requires string[]");
+                    will_break = true;
+                }
+            })
         }
 
         if (!command.permissions) {
             missing_properties.push("permissions");
+        } else if (!Array.isArray(command.permissions)) {
+            invalid_types.push("permissions : requires string[]");
+        } else {
+            let will_break: boolean = false;
+            (<any[]>command.permissions).forEach((elem: any) => {
+                if (typeof elem != "string" && !will_break) {
+                    invalid_types.push("permissions : requires string[]");
+                    will_break = true;
+                }
+            })
         }
 
         if (missing_properties.length) {
             const e: Error = new Error(`Missing ${missing_properties.map((property: string) => `${property.red}`)} ${missing_properties.length == 1 ? 'property' : 'properties'} in '${file.red}'`)
+            Bestfriends.error(e.message.replace('Error:', ''));
+            throw e;
+        }
+
+        if (invalid_types.length) {
+            const e: Error = new Error(`Invalid types for ${invalid_types.map((type: string) => `${type.red}`)} in '${file.red}'`);
             Bestfriends.error(e.message.replace('Error:', ''));
             throw e;
         }
