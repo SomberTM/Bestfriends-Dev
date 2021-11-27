@@ -8,7 +8,10 @@ import {
     Emitter,
     Registry,
     colors,
-    path
+    path,
+    BestfriendsGuild,
+    save,
+    startListeners
 } from './deps';
 
 export class Bestfriends {
@@ -22,6 +25,7 @@ export class Bestfriends {
     public log: (...args: any[]) => void;
     public warn: (...args: any[]) => void;
     public error: (...args: any[]) => void;
+    public save: (Guild: string, GuildData: BestfriendsGuild) => Promise<BestfriendsGuild>;
 
     constructor(clientOptions?: ClientOptions) {
         this.client = new Client(clientOptions);
@@ -33,7 +37,11 @@ export class Bestfriends {
         this.log = Bestfriends.log;
         this.warn = Bestfriends.warn;
         this.error = Bestfriends.error;
+        this.save = async (guildid: string, BestfriendsGuild: BestfriendsGuild): Promise<BestfriendsGuild> => {
+            return await save(this, BestfriendsGuild, guildid);
+        }
 
+        startListeners(this);
         EventHandler(this);
         this.client.login(process.env.TOKEN);
     }
