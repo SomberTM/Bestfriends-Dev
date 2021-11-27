@@ -1,15 +1,38 @@
 import { ms } from '../deps';
 
 export interface BestfriendsGuild {
+    id: string,
     prefix: string,
     relationships: BestfriendsRelationship[],
     users: BestfriendsUser[],
     whitelistedChannels: whitelistedChannel[], //For Active Converstation stuff
-    randomEventsChannel: string,
-    randomEvents: boolean,
+    ranks: Ranks,
+    randomEvents: randomEvents,
     activeThreshold: number, //Active Conversation
     activeMinimum: number, //Active Conversation
-    [key: string]: string | BestfriendsRelationship[] | BestfriendsUser[] | number | whitelistedChannel[] | boolean
+    [key: string]: string | BestfriendsRelationship[] | BestfriendsUser[] | number | whitelistedChannel[] | randomEvents | Ranks
+}
+
+export interface Ranks {
+    status: Rank[],   //Status
+    activity: Rank[], //Messages
+    interactivity: Rank[], //Mentions
+    last_saved: number
+    save_interval: number
+    [key: string]: Rank[] | number
+}
+
+export interface Rank {
+    id: string,
+    rank: number
+}
+
+export interface randomEvents {
+    channel: string,
+    enabled: boolean,
+    interval: number,
+    duration: number
+    [key: string]: string | boolean | number
 }
 
 export interface whitelistedChannel {
@@ -39,6 +62,19 @@ export interface BestfriendsRelationship {
 export interface BestfriendsUser {
     id: string,
     activity: number
+    netStatus: number //Equal to status of relationships to me + buffs
+    buffs: Buff[],
+    totalFights: {
+        won: number,
+        lost: number,
+        total: number
+    }
+}
+
+//Each User has a list of Buffs. Value affects Net Status of that User
+export interface Buff {
+    name: string,
+    value: number
 }
 
 //Cooldowns for each user
@@ -58,32 +94,53 @@ export interface Cooldown {
 }
 
 export interface CDConsts {
+    Ranks: number,
     Shoutout: number,
     Callout: number,
     Fight: number,
     [key: string]: number
 }
 
-export const DefaultBestfriendsGuild: BestfriendsGuild = {
-    prefix: 'bt.',
-    activeThreshold: 3,
-    activeMinimum: 3,
-    randomEventsChannel: "", //Supplement random events channel
-    randomEvents: false,
-    relationships: [],
-    users: [],
-    whitelistedChannels: []
-}
-
 export const CooldownConstants: CDConsts = {
+    Ranks: ms('1 hour'),
     Shoutout: ms('1 hour'),
     Callout: ms('1 hour'),
     Fight: ms('1 hour')
 }
 
+export const DefaultBestfriendsGuild: BestfriendsGuild = {
+    id: "",
+    prefix: 'bt.',
+    activeThreshold: 3,
+    activeMinimum: 3,
+    randomEvents: {
+        channel: "",
+        enabled: false,
+        interval: ms('15m'),
+        duration: 60000
+    },
+    ranks: {
+        status: [],
+        activity: [],
+        interactivity: [],
+        last_saved: (Date.now() - CooldownConstants.Ranks),
+        save_interval: CooldownConstants.Ranks
+    },
+    relationships: [],
+    users: [],
+    whitelistedChannels: []
+}
+
 export const DefaultBestfriendsUser: BestfriendsUser = {
     id: "", //Supplement id
-    activity: 1
+    activity: 1,
+    netStatus: 0,
+    buffs: [],
+    totalFights: {
+        won: 0,
+        lost: 0,
+        total: 0
+    }
 }
 
 export const DefaultBestfriendsRelationship: BestfriendsRelationship = {
@@ -109,6 +166,16 @@ export const DefaultBestfriendsRelationship: BestfriendsRelationship = {
             cooldown_time: CooldownConstants.Fight
         }
     }
+}
+
+export interface BuffConstants {
+    VICTORIOUS: string,
+    HUMILIATED: string
+}
+
+export const Buffs: BuffConstants = {
+    VICTORIOUS: 'Victorious',   //Each Stack of this buff grants 30 Net Status
+    HUMILIATED: 'Humiliated'    //Each Stack of this buff removes 5 Net Status
 }
 
 export const MentionIncrement: number = 10;
