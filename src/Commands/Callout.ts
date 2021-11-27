@@ -1,13 +1,15 @@
-import { MessageEmbed } from 'discord.js';
 import {
     Bestfriends,
     BestfriendsGuild,
     BestfriendsRelationship, 
-    DefaultBestfriendsRelationship,
     Message,
+    MessageEmbed,
     GuildMember,
     ms,
-    clone
+    BestfriendsUser,
+    findRelationship, 
+    findUser,
+    ARGUMENTS_NONE
 } from '../deps';
 
 export default {
@@ -18,22 +20,18 @@ export default {
     permissions: [ 'SEND_MESSAGES' ],
     callout: async function(Bestfriends: Bestfriends, BestfriendsGuild: BestfriendsGuild, message: Message, args: string[]) {
         if (!args[0]) {
-            return Bestfriends.events.emit(Bestfriends.events.ARGUMENTS.NONE, '@<user>');
+            let error: ARGUMENTS_NONE = {
+                example: `${BestfriendsGuild.prefix}callout @Somber#6753`,
+                append_prefix: false,
+                missing: [ '@<user>' ]
+            }
+            return Bestfriends.events.emit(Bestfriends.events.ARGUMENTS.NONE, message, error);
         } if (!message.mentions.members?.first()) {
-            return Bestfriends.events.emit(Bestfriends.events.ARGUMENTS.INCORRECT);
+            return Bestfriends.events.emit(Bestfriends.events.ARGUMENTS.INVALID);
         }
 
         let to: GuildMember = message.mentions.members.first()!;
-        let relationship: BestfriendsRelationship | undefined = BestfriendsGuild.relationships.find((relationship: BestfriendsRelationship) => relationship.to == to.user.id && relationship.from == message.author.id);
-
-        if (!relationship) {
-            let newRelationship: BestfriendsRelationship = clone(DefaultBestfriendsRelationship);
-            newRelationship.to = to.user.id;
-            newRelationship.from = message.author.id;
-            BestfriendsGuild.relationships.push(newRelationship);
-            Bestfriends.log(`Created relationship from ${message.author.tag.cyan} to ${to.user.tag.cyan}`);
-            relationship = BestfriendsGuild.relationships.find((relationship: BestfriendsRelationship) => relationship.to == to.user.id && relationship.from == message.author.id)!;
-        }
+        let relationship: BestfriendsRelationship = findRelationship(BestfriendsGuild, to.user.id, message.author.id);
         
         let last_used: number = relationship.cooldowns.callout.last_used;
         let cooldown_time: number = relationship.cooldowns.callout.cooldown_time;
@@ -45,12 +43,16 @@ export default {
             let preStatus: number = relationship.status;
             relationship.status -= 10;
 
+            let bestfriendsUser: BestfriendsUser = findUser(BestfriendsGuild, relationship.to);
+
+            bestfriendsUser!.netStatus -= 10;
+
             message.channel.send(
                 new MessageEmbed()
                 .setColor(Bestfriends.embedColor)
                 .setTitle(`${message.member?.displayName} has called out ${to.displayName} for being a bad friend`)
-                .addField(`Status Before`, `\`${preStatus}\``, true)
-                .addField(`Status After`, `\`${relationship.status}\``, true)
+                .addField(`Relationship Status Before`, `\`${preStatus}\``, true)
+                .addField(`Relationship Status After`, `\`${relationship.status}\``, true)
                 .setTimestamp()
             )
 
